@@ -1,0 +1,5 @@
+bld/
+rebuild
+
+*.sublime-project
+*.sublime-workspace
