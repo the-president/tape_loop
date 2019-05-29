@@ -3,6 +3,7 @@
 
 enum svf_mode
 {
+	OFF,
 	LP,
 	HP,
 	BP

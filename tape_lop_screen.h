@@ -16,7 +16,7 @@ struct tape_lop_screen : public screen, audio_guy
 	void add_loop(unsigned int sample_rate,int inputs,int outputs);
 	void drop_loop(int index);
 
-	void top_panel(graphical_interface& gui, audio_system& audio, int& scroll, int gap=586);
+	void top_panel(graphical_interface& gui, audio_system& audio, int& scroll, int gap=546);
 
 	float seconds();
 	int samples(unsigned int sample_rate);

@@ -1,6 +1,8 @@
 #include <cmath>
 #include <stdio.h>
+#include <sndfile.hh>
 #include "tape_lop_screen.h"
+#include "file_dialog/tinyfiledialogs.h"
 
 //some dumb layout consts
 static int panel_margin = 2;
@@ -45,6 +47,32 @@ void tape_lop_screen::top_panel(graphical_interface& gui,audio_system& audio,int
 		if(gui.fs_button(panel_padding,panel_padding,80,30,"add loop"))
 		{
 			add_loop(audio.sample_rate,audio.in_channels,audio.out_channels);
+		}
+
+		if(gui.fs_button(gui.right_end() + 5, panel_padding, 50,30,"load"))
+		{
+			const char* path = tinyfd_openFileDialog("open file","zomp",0,NULL,NULL,0);
+
+			if(path != NULL)
+			{
+				SF_INFO inf;
+				SNDFILE* file = sf_open(path, SFM_READ, &inf);
+				
+				loops.emplace_back(audio.in_channels,audio.out_channels,inf.frames);
+
+				tape_lop& load_loop = loops.at(loops.size()-1);
+
+
+				float read[inf.channels];
+
+				for(int i=0;i<load_loop.tape.size();++i)
+				{
+					sf_readf_float(file,read,1);
+					load_loop.tape[i] = read[0];
+				}
+				
+				sf_close(file);	
+			}
 		}
 
 		int bar_zone_x = gui.right_end()+gap;
@@ -166,8 +194,8 @@ screen_result tape_lop_screen::loop(sdl_system& sys, audio_system& audio,graphic
 
 		}
 		
-		gui.end_frame();
 		frame_buddy.delay();
+		gui.end_frame();
 	}
 }
 

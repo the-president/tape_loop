@@ -6,9 +6,9 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <RtAudio.h>
+
 #include "audio.h"
 #include "audio_select_screen.h"
-
 #include "graphical_interface.h"
 
 // static void layout_helpers(graphical_interface& gui,int& panel_margin,int& line_height, int& panel_padding, int& panel_width, int& panel_gap)

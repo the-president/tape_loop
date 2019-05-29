@@ -3,6 +3,7 @@ sdl_dep = dependency('sdl2')
 sdl_img = dependency('sdl2_image')
 sdl_ttf = dependency('sdl2_ttf')
 rtaudio = dependency('librtaudio')
+libsndfile = dependency('sndfile')
 
 src = [
 	'main.cpp',
@@ -15,7 +16,8 @@ src = [
 	'tape_lop_screen.cpp',
 	'audio_select_screen.cpp',
 	'state_variable_filter.cpp',
-	'tape_lop_gui.cpp'
+	'tape_lop_gui.cpp',
+	'file_dialog/tinyfiledialogs.cpp'
 ]
 
-executable('tape_lop', src,dependencies:[sdl_dep,sdl_img,sdl_ttf,rtaudio])
+executable('tape_lop', src,dependencies:[sdl_dep,sdl_img,sdl_ttf,rtaudio,libsndfile])

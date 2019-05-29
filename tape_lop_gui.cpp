@@ -1,11 +1,15 @@
 #include "tape_lop.h"
 
-static int panel_width = 1278;
-static int panel_height = 400;
-static int collapsed_panel_height = 210;
-static int panel_margin = 2;
-
-static int rh_panel_w = 335;
+static const int panel_width = 1278;
+static const int panel_height = 400;
+static const int collapsed_panel_height = 210;
+static const int panel_margin = 2;
+static const int rh_panel_w = 335;
+static const int mixer_ph = 192;
+static const int mixer_pw = 634;
+static const int ph = 160;
+static const int gap= 30;
+static const int in_out_page_size = 8;
 
 void tape_lop::collapsed_panel(graphical_interface& gui, int x, int y)
 {
@@ -120,12 +124,6 @@ void tape_lop::top_controls(graphical_interface& gui, int x, int y)
 	}
 	gui.panel_end();
 }
-
-static const int mixer_ph = 192;
-static const int mixer_pw = 634;
-static const int ph = 160;
-static const int gap= 30;
-static const int in_out_page_size = 8;
 
 void tape_lop::input_mixer(graphical_interface& gui, int x, int y)
 {
@@ -247,13 +245,12 @@ void tape_lop::output_mixer(graphical_interface& gui, int x, int y)
 	gui.panel_end();
 }
 
-static int col2 = 160;
-
 void tape_lop::read_head_view(graphical_interface& gui, int x, int y, read_head& rh, int index)
 {
 	gui.panel(x,y,rh_panel_w, ph);
 	{
 		static const int col_start = 5;
+		static const int col2 = 160;
 
 		gui.format_label(col_start,2,"read head %d",index + 1);
 

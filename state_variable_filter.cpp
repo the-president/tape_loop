@@ -23,7 +23,7 @@ stage_4(0.0)
 
 float svf::tick(float input)
 {
-	float cut = exp2(cutoff) - 1;
+	float cut = cutoff;
 	calculate_feedback(cut);
 
 	stage_1 += cut * (input - stage_1 + feedback * (stage_1 - stage_2));
@@ -41,7 +41,10 @@ float svf::tick(float input)
 		break;
 		case BP:
 			return (stage_1 - stage_4);
-		break;	
+		break;
+		case OFF:
+			return input;
+		break;
 	}
 }
 
