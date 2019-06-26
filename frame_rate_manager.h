@@ -9,7 +9,6 @@ struct frame_rate_manager
 
 	Uint32 ticks;
 	Uint32 frame_ticks;
-
 };
 
 

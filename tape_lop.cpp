@@ -23,13 +23,13 @@ static int wrap(int x, int const lower_bound, int const upper_bound)
 	return lower_bound + (x - lower_bound) % range;
 }
 
-static float range_flerp(float start,float end, float range, float index)
+static double range_flerp(double start,double end, double range, double index)
 {
-	float slope = (end-start)/range;
+	double slope = (end-start)/range;
 	return start + (index * slope);
 }
 
-float read_head::position(float const write_head, int const tape_size)
+double read_head::position(double const write_head, int const tape_size)
 {
 	int unwrapped = write_head - offset.val;
 	return wrap(unwrapped,0,tape_size);
@@ -79,21 +79,21 @@ void tape_lop::feedback_button()
 	}
 }
 
-void tape_lop::update_and_record(float input_val)
+void tape_lop::update_and_record(double input_val)
 {
-	float speed_integer =0;
-	float speed_fraction = modf(speed,&speed_integer);
+	double speed_integer =0;
+	double speed_fraction = modf(speed,&speed_integer);
 
-	float write_increment_int;
-	float end_fraction = modf(write_head_fraction + speed_fraction,&write_increment_int);
+	double write_increment_int;
+	double end_fraction = modf(write_head_fraction + speed_fraction,&write_increment_int);
 
 	int total_samples = speed_integer + write_increment_int;
-	float range = (float)total_samples + end_fraction - write_head_fraction;
+	double range = (double)total_samples + end_fraction - write_head_fraction;
 
 	for(int i=1;i<=total_samples;++i)
 	{
 		int tape_pos = (write_head + i) % tape.size();
-		float val = range_flerp(last_val,input_val,range,(((float)i)-write_head_fraction));
+		double val = range_flerp(last_val,input_val,range,(((double)i)-write_head_fraction));
 
 		last_sample = tape_pos;
 
@@ -111,7 +111,7 @@ void tape_lop::update_and_record(float input_val)
 	write_head_fraction = end_fraction;
 }
 
-float tape_lop::tick(float input_val)
+double tape_lop::tick(double input_val)
 {
 	//update the target params
 	for(read_head& rh : read_heads)
@@ -119,6 +119,7 @@ float tape_lop::tick(float input_val)
 		rh.offset.update();
 		rh.amp.update();
 		rh.feedback.update();
+		rh.output_filter.calculate_filter_coefficients();
 	}
 
 	global_record.update();
@@ -129,19 +130,19 @@ float tape_lop::tick(float input_val)
 		return 0;
 	}
 
-	float out_val = 0;
-	float feedback_val =0;
+	double out_val = 0;
+	double feedback_val =0;
 
 	for(read_head& rh : read_heads)
 	{
 		if(rh.active)
 		{
 			int pos = rh.position(write_head,tape.size());
-			float fraction = write_head_fraction;
+			double fraction = write_head_fraction;
 
 			int bottom_sample = pos;
 
-			float val =0;
+			double val =0;
 
 			if(fraction == 0)
 			{
@@ -153,13 +154,13 @@ float tape_lop::tick(float input_val)
 				val = range_flerp(tape.at(bottom_sample),tape.at(top_sample),1,fraction);
 			}
 
-			float filter_val = rh.output_filter.tick(val);
+			double filter_val = rh.output_filter.tick(val);
 			out_val += (exp2(rh.amp.val)-1) * filter_val;
 			feedback_val += (exp2(rh.feedback.val)-1) * filter_val;	
 		}
 	}
 
-	float final_input = 0;
+	double final_input = 0;
 
 	if(record || global_record.val !=0)
 	{
@@ -171,7 +172,7 @@ float tape_lop::tick(float input_val)
 		final_input += feedback_val * global_fb.val;
 	}
 
-	float filtered_input = input_filter.tick(final_input);
+	double filtered_input = input_filter.tick(final_input);
 
 	//now update positions
 	update_and_record(filtered_input);

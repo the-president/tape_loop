@@ -1,3 +1,5 @@
+#include <sndfile.hh>
+#include "file_dialog/tinyfiledialogs.h"
 #include "tape_lop.h"
 
 static const int panel_width = 1278;
@@ -103,6 +105,7 @@ void tape_lop::top_controls(graphical_interface& gui, int x, int y)
 {
 	gui.panel(x,y,panel_width-7,40);
 	{
+		int other_side = panel_width-7;
 		int center_line = 12;
 
 		if( gui.select_button(gui.right_end()+panel_margin,center_line,"collapsed",graphics_state == COLLAPSED) )
@@ -121,6 +124,44 @@ void tape_lop::top_controls(graphical_interface& gui, int x, int y)
 		}
 
 		gui.format_label(gui.right_end()+10, center_line + 2,"loop %d",loop_number);
+
+		if (gui.button(other_side - 45, center_line,"save"))
+		{
+			const char* path = tinyfd_saveFileDialog("open file","",0,NULL,NULL);
+
+			if(path != NULL)
+			{
+				SF_INFO inf;
+				
+				inf.samplerate= 48000;
+				inf.frames = tape.size();
+				inf.channels	= 1;
+				inf
+				.format = SF_FORMAT_WAV | SF_FORMAT_PCM_24;
+
+				SNDFILE* file = sf_open(path, SFM_WRITE, &inf);
+
+				if(file != NULL)
+				{
+					double* copybuff = new double[tape.size()];
+
+					for(int i=0;i<tape.size();++i)
+					{
+						copybuff[i] = tape.at(i);
+					}
+
+					sf_write_double(file,copybuff,tape.size());
+					delete[] copybuff;
+					sf_close(file);
+				}
+				else
+				{
+					printf("error saving file\n");
+				}
+			}
+		}
+
+		
 	}
 	gui.panel_end();
 }
@@ -154,10 +195,10 @@ void tape_lop::input_mixer(graphical_interface& gui, int x, int y)
 		for(int i=input_page; i < input_page + in_out_page_size && i < inputs.size(); ++i)
 		{
 			int col_start = gui.right_end()+10;
-			float& in = inputs.at(i);
+			double& in = inputs.at(i);
 
 			gui.format_label(col_start,input_panel_top,"in %d",i + 1);
-			gui.float_knob(col_start, gui.bottom()+5,in,0,2);
+			gui.double_knob(col_start, gui.bottom()+5,in,0,2);
 
 			int button_row = gui.bottom() + 5;
 
@@ -174,11 +215,11 @@ void tape_lop::input_mixer(graphical_interface& gui, int x, int y)
 
 		int filter_x = panel_width - 160;
 		gui.flat_label(filter_x,input_panel_top,"input filter");
-		gui.float_knob(filter_x,gui.bottom() + 5,input_filter.cutoff,0.001,0.9999);
+		gui.double_knob(filter_x,gui.bottom() + 5,input_filter.cutoff,0.001,0.9999);
 
 		if(gui.fs_button(panel_start,150,100,30,"mute all"))
 		{
-			for(float& in : inputs)
+			for(double& in : inputs)
 			{
 				in = 0;
 			}
@@ -215,10 +256,10 @@ void tape_lop::output_mixer(graphical_interface& gui, int x, int y)
 		for(int i=output_page; i < output_page + in_out_page_size && i < outputs.size(); ++i)
 		{
 			int col_start = gui.right_end()+15;
-			float& out = outputs.at(i);
+			double& out = outputs.at(i);
 
 			gui.format_label(col_start,input_panel_top,"out %d",i + 1);
-			gui.float_knob(col_start, gui.bottom()+5,out,0,2);
+			gui.double_knob(col_start, gui.bottom()+5,out,0,2);
 
 			int button_row = gui.bottom() + 5;
 
@@ -235,7 +276,7 @@ void tape_lop::output_mixer(graphical_interface& gui, int x, int y)
 
 		if(gui.fs_button(panel_start,150,100,30,"mute all"))
 		{
-			for(float& out : outputs)
+			for(double& out : outputs)
 			{
 				out = 0;
 			}
@@ -265,18 +306,19 @@ void tape_lop::read_head_view(graphical_interface& gui, int x, int y, read_head&
 		int button_spot2 = gui.bottom()+5;
 		gui.int_label(col_start + 37,button_spot+8,"offset",rh.offset.val);
 
-		gui.float_knob(col_start,button_spot2,rh.amp.target,0,4);
+		gui.double_knob(col_start,button_spot2,rh.amp.target,0,4);
 		int button_spot3 = gui.bottom() + 5;
-		gui.float_label(col_start + 37,button_spot2+8,"amp",rh.amp.val);
+		gui.double_label(col_start + 37,button_spot2+8,"amp",rh.amp.val);
 
-		gui.float_knob(col_start,button_spot3,rh.feedback.target,0,1.5);
-		gui.float_label(col_start + 37,button_spot3+8,"FB",rh.feedback.val);
+		gui.double_knob(col_start,button_spot3,rh.feedback.target,0,1.5);
+		gui.double_label(col_start + 37,button_spot3+8,"FB",rh.feedback.val);
 
-		gui.float_knob(col2,button_spot,rh.output_filter.cutoff,0.001,0.9999);
-		gui.float_label(col2 + 37, button_spot+8,"cutoff",rh.output_filter.cutoff);
+		gui.double_knob(col2,button_spot,rh.output_filter.cutoff,0.001,0.9999);
 
-		gui.float_knob(col2,button_spot2,rh.output_filter.reso,0.00,0.9999);
-		gui.float_label(col2 + 37, button_spot2+8,"reso",rh.output_filter.reso);
+		gui.double_label(col2 + 37, button_spot+8,"cutoff",rh.output_filter.cutoff);
+
+		gui.double_knob(col2,button_spot2,rh.output_filter.reso,0.00,0.9999);
+		gui.double_label(col2 + 37, button_spot2+8,"reso",rh.output_filter.reso);
 
 		if(gui.select_button(col2,button_spot3+6,"L",rh.output_filter.mode == LP))
 		{
@@ -327,7 +369,7 @@ void tape_lop::transport_panel(graphical_interface& gui, int x, int y)
 			feedback_button();
 		}
 
-		gui.float_knob(gui.right_end()+45,row_zone,speed,.25,2);
+		gui.double_knob(gui.right_end()+45,row_zone,speed,.25,2);
 		int speed_center = gui.center_x();
 
 		int second_row = gui.bottom()+2;
@@ -354,7 +396,7 @@ void tape_lop::transport_panel(graphical_interface& gui, int x, int y)
 
 		int c_line = gui.center_y()-8;
 		//fuck it just magic number
-		gui.float_label(speed_center - (6*9),c_line,"Speed",speed);
+		gui.double_label(speed_center - (6*9),c_line,"Speed",speed);
 	}
 	gui.panel_end();
 }

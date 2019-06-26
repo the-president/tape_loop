@@ -88,7 +88,7 @@ bool audio_system::open_stream()
 	out_params.deviceId = output_device_id;
 	out_params.nChannels = out_channels;
 
-	rt.openStream(&out_params, &in_params, RTAUDIO_FLOAT32, sample_rate, &buffer_size, rtaudio_callback, this,&stream_opts,error_callback);
+	rt.openStream(&out_params, &in_params, RTAUDIO_FLOAT64, sample_rate, &buffer_size, rtaudio_callback, this,&stream_opts,error_callback);
 	stream_open = true;
 	return true;
 }

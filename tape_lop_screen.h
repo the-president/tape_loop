@@ -18,7 +18,7 @@ struct tape_lop_screen : public screen, audio_guy
 
 	void top_panel(graphical_interface& gui, audio_system& audio, int& scroll, int gap=546);
 
-	float seconds();
+	double seconds();
 	int samples(unsigned int sample_rate);
 
 	screen_result loop(sdl_system& sys, audio_system& audio,graphical_interface& gui,frame_rate_manager& frame_buddy);

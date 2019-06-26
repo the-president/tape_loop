@@ -16,25 +16,25 @@ class graphical_interface;
 struct read_head
 {
 	target_parameter<int> offset;
-	target_parameter<float> amp;
-	target_parameter<float> feedback;
+	target_parameter<double> amp;
+	target_parameter<double> feedback;
 	svf output_filter;
 	
 	bool active = false;
 
 	read_head();
-	float position(float const write_head, int const tape_size);
+	double position(double const write_head, int const tape_size);
 };
 
 struct tape_lop
 {
-	std::vector<float> tape;
+	std::vector<double> tape;
 
 	int write_head;
-	float write_head_fraction;
-	float last_val;
+	double write_head_fraction;
+	double last_val;
 
-	float speed = 1;
+	double speed = 1;
 
 	bool play;
 	bool record;
@@ -46,18 +46,18 @@ struct tape_lop
 	void record_button();
 	void feedback_button();
 
-	target_parameter<float> global_record;
-	target_parameter<float> global_fb;
+	target_parameter<double> global_record;
+	target_parameter<double> global_fb;
 
 	int last_sample =0;
 
-	std::vector<float> inputs;
-	std::vector<float> outputs;
+	std::vector<double> inputs;
+	std::vector<double> outputs;
 	std::array<read_head,3> read_heads;
 
-	void update_and_record(float input_val);
+	void update_and_record(double input_val);
 
-	float tick(float input_val);
+	double tick(double input_val);
 	
 	tape_lop(int inputs,int outputs,unsigned int length);
 	void init_buckets();

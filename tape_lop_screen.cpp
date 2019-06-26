@@ -29,9 +29,9 @@ void num_bar(graphical_interface& gui,int x,int y,int& val,int min,int max,const
 	}	
 }
 
-float tape_lop_screen::seconds()
+double tape_lop_screen::seconds()
 {
-	float seconds_per_beat = 60.0/bpm;
+	double seconds_per_beat = 60.0/bpm;
 	return 4 * bars * seconds_per_beat;
 }
 
@@ -63,11 +63,11 @@ void tape_lop_screen::top_panel(graphical_interface& gui,audio_system& audio,int
 				tape_lop& load_loop = loops.at(loops.size()-1);
 
 
-				float read[inf.channels];
+				double read[inf.channels];
 
 				for(int i=0;i<load_loop.tape.size();++i)
 				{
-					sf_readf_float(file,read,1);
+					sf_readf_double(file,read,1);
 					load_loop.tape[i] = read[0];
 				}
 				
@@ -114,10 +114,10 @@ void tape_lop_screen::top_panel(graphical_interface& gui,audio_system& audio,int
 		num_bar(gui,bar_zone_x,bar_zone_y,bpm,10,360,"B.P.M.");
 		num_bar(gui,gui.right_end() + 20,gui.top(),bars,1,16,"Bars");
 
-		float secs = seconds();
+		double secs = seconds();
 		int samps = samples(audio.sample_rate);
 		int label_line = gui.right_end() + 20;
-		gui.float_label(label_line,30,"seconds: ",secs);
+		gui.double_label(label_line,30,"seconds: ",secs);
 		gui.int_label(label_line,7,"samples: ",samps);
 	}
 	gui.panel_end();
@@ -191,7 +191,6 @@ screen_result tape_lop_screen::loop(sdl_system& sys, audio_system& audio,graphic
 			{
 				fill += 2;
 			}
-
 		}
 		
 		frame_buddy.delay();
@@ -202,14 +201,14 @@ screen_result tape_lop_screen::loop(sdl_system& sys, audio_system& audio,graphic
 void tape_lop_screen::do_the_audio(void* outbuf,void* inbuf,unsigned int nFrames,double streamtime,RtAudioStreamStatus	status,const int in_channels, const int out_channels)
 {
 
-	float	*out_buffer = static_cast<float*>(outbuf);
-	float *in_buffer = static_cast<float*>(inbuf);
+	double	*out_buffer = static_cast<double*>(outbuf);
+	double *in_buffer = static_cast<double*>(inbuf);
 
 	for(int frame_offset=0;frame_offset<(nFrames); ++frame_offset)
 	{
 		for(int i=0; i<out_channels;++i)
 		{
-			float* out_channel = out_buffer + (i*nFrames);
+			double* out_channel = out_buffer + (i*nFrames);
 			out_channel[frame_offset] =0;
 		}
 
@@ -217,20 +216,20 @@ void tape_lop_screen::do_the_audio(void* outbuf,void* inbuf,unsigned int nFrames
 		{
 			int in_chans = std::min<int>(loop.inputs.size(),in_channels);
 			int out_chans = std::min<int>(loop.outputs.size(),out_channels);
-			float input_val =0;
+			double input_val =0;
 
 			for(int i=0; i<in_chans;++i)
 			{
-				float amp = loop.inputs.at(i);
+				double amp = loop.inputs.at(i);
 				input_val += (in_buffer + (i*nFrames))[frame_offset] * amp;
 			};
 
-			float output_val = loop.tick(input_val);
+			double output_val = loop.tick(input_val);
 
 			for(int i=0; i<out_chans;++i)
 			{
-				float amp = loop.outputs.at(i);
-				float* out_channel = out_buffer + (i*nFrames);
+				double amp = loop.outputs.at(i);
+				double* out_channel = out_buffer + (i*nFrames);
 				out_channel[frame_offset] += output_val * amp;
 			};			
 		}

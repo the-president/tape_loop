@@ -2,54 +2,64 @@
 #include "state_variable_filter.h"
 
 svf::svf():
+mode(LP),
 cutoff(.99),
 reso(0.0),
-mode(LP),
-stage_1(0.0),
-stage_2(0.0),
-stage_3(0.0),
-stage_4(0.0)
+
+state_1(0.0),
+state_2(0.0)
 {}
 
-svf::svf(float c,float r,svf_mode m):
+svf::svf(double c,double r,svf_mode m):
+mode(m),
 cutoff(c),
 reso(r),
-mode(m),
-stage_1(0.0),
-stage_2(0.0),
-stage_3(0.0),
-stage_4(0.0)
+
+state_1(0.0),
+state_2(0.0)
 {}
 
-float svf::tick(float input)
+void svf::calculate_filter_coefficients()
 {
-	float cut = cutoff;
-	calculate_feedback(cut);
+	//first cutoff warping
+	double cutoff_freq = (sample_rate/2) * (exp2(cutoff) - 1);
+	double q = 1.0/(2 * (1-reso));
+	double freq = cutoff_freq * 2 * M_PI;
+	double time_scale = 1.0/sample_rate;
+	double warped_frequency = (2.0/time_scale) * tan(freq*time_scale/2.0);
 
-	stage_1 += cut * (input - stage_1 + feedback * (stage_1 - stage_2));
-	stage_2 += cut * (stage_1 - stage_2);
-	stage_3 += cut * (stage_2 - stage_3);
-	stage_4 += cut * (stage_3 - stage_4);
+	gain = warped_frequency * time_scale/2;
+	damping_factor = 1.0/ (2 * q);
+}
+
+double svf::tick(double input)
+{
+
+	if(mode == OFF)
+	{
+		return input;
+	}
+
+	double highpass_out = (input - (2 * damping_factor + gain) * state_1 - state_2) / (1 + (2 * damping_factor * gain) + gain * gain);
+	double bandpass_out = highpass_out * gain + state_1;
+	double lowpass_out = bandpass_out * gain + state_2;
+
+	state_1 = gain * highpass_out + bandpass_out;
+	state_2 = gain * bandpass_out + lowpass_out;
 
 	switch(mode)
 	{
 		case LP:
-			return stage_4;
+			return lowpass_out;
 		break;
 		case HP:
-			return input - stage_4;	
+			return highpass_out;	
 		break;
 		case BP:
-			return (stage_1 - stage_4);
+			return bandpass_out;
 		break;
-		case OFF:
+		default:
 			return input;
 		break;
 	}
-}
-
-void svf::calculate_feedback(float cut)
-{ 
-	
-	feedback = reso + reso/(1.0 - cut); 
 }

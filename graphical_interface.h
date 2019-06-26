@@ -102,8 +102,8 @@ class graphical_interface
 		bool fs_button(int x, int y, int w,int h,const char* label);
 		bool select_button(int x, int y, const char* label, bool selected);
 
-		void float_bar(int x,int y, float& val,float min, float max);
-		void float_knob(int x, int y, float& val,float min, float max,float range_div=200);
+		void double_bar(int x,int y, double& val,double min, double max);
+		void double_knob(int x, int y, double& val,double min, double max,double range_div=200);
 
 		void int_bar(int x,int y, int& val,int min, int max);
 		void int_knob(int x, int y, int& val,int min, int max, int mult = 1);
@@ -119,7 +119,7 @@ class graphical_interface
 		void flat_label(int x,int y,const char* text);
 		void format_label(int x, int y, const char* format, ...);
 		void state_label(int x,int y,const char* true_text, const char* false_text,bool& state);
-		void float_label(int x,int y,const char* pre_text, float& val);
+		void double_label(int x,int y,const char* pre_text, double& val);
 		void int_label(int x,int y,const char* pre_text, int& val);
 
 		graphical_interface(SDL_Renderer* rend,SDL_Texture* font, const font_info* font_info);

@@ -12,23 +12,22 @@ enum svf_mode
 struct svf
 {
 	svf();
-	svf(float c,float r,svf_mode m);
+	svf(double c,double r,svf_mode m);
 
-	float tick(float input);
-
-	float cutoff;
-	float reso;
+	double tick(double input);
+	void calculate_filter_coefficients();
+	
 	svf_mode mode;
+
+	double cutoff;
+	double reso;
+	double sample_rate = 48000;
 	
-	private:
-	float feedback;
-	
-	void calculate_feedback(float cut);
-	
-	float stage_1;
-	float stage_2;
-	float stage_3;
-	float stage_4;
+	protected:
+		double gain;
+		double damping_factor;
+		double state_1; // first integrator
+		double state_2;
 };
 
 #endif

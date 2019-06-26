@@ -6,6 +6,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+// a quick no-op function (for callbacks)
+
 //=============================================================================
 // THE STATIC STUFF
 //=============================================================================
@@ -401,12 +403,12 @@ bool graphical_interface::select_button(int x, int y, const char* label, bool se
 	}
 }
 
-void graphical_interface::float_bar(int x,int y,float& val,float min, float max)
+void graphical_interface::double_bar(int x,int y,double& val,double min, double max)
 {
 	SDL_Rect bounds{x+offset_x,y+offset_y,100,30};
 	last_rect = SDL_Rect{x,y,bounds.w,bounds.h};
 
-	float range = max - min;
+	double range = max - min;
 
 	SDL_SetRenderDrawColor(rend, 0x55, 0xFF, 0xFF, 0x00);
 	SDL_RenderDrawRect(rend,&bounds);
@@ -426,7 +428,7 @@ void graphical_interface::float_bar(int x,int y,float& val,float min, float max)
 		}
 		else 
 		{
-			val = min + (range * (float)(xpos-(bounds.x+1))/(bounds.w-2) );
+			val = min + (range * (double)(xpos-(bounds.x+1))/(bounds.w-2) );
 		}
 	}
 		
@@ -442,7 +444,7 @@ void graphical_interface::float_bar(int x,int y,float& val,float min, float max)
 	}
 	else
 	{
-		float fill = (float)(bounds.w-2) * ((val-min)/range);
+		double fill = (double)(bounds.w-2) * ((val-min)/range);
 		fill_w = (int)std::trunc(fill);
 	}
 
@@ -453,9 +455,9 @@ void graphical_interface::float_bar(int x,int y,float& val,float min, float max)
 	writer.write(bounds.x + ((bounds.w/2) - 8), bounds.y + ((bounds.h/2) - 8),temp_buff);
 }
 
-void graphical_interface::float_knob(int x, int y,float& val,float min, float max,float range_div)
+void graphical_interface::double_knob(int x, int y,double& val,double min, double max,double range_div)
 {
-	float range = max - min;
+	double range = max - min;
 
 	SDL_Rect bounds = {x+offset_x,y+offset_y,32,32};
 	last_rect = SDL_Rect{x,y,bounds.w,bounds.h};
@@ -463,7 +465,7 @@ void graphical_interface::float_knob(int x, int y,float& val,float min, float ma
 	if(current.left_button.button == DOWN && SDL_PointInRect(&current.left_button.down_pos,&bounds))
 	{
 		int delta = mouse_y_delta();
-		float inc = range/range_div;
+		double inc = range/range_div;
 
 
 		val = std::clamp( val + (delta*inc),min,max);
@@ -495,7 +497,7 @@ void graphical_interface::int_bar(int x,int y, int& val,int min, int max)
 	SDL_Rect bounds{x+offset_x,y+offset_y,100,30};
 	last_rect = SDL_Rect{x,y,bounds.w,bounds.h};
 
-	float range = max - min;
+	double range = max - min;
 
 	SDL_SetRenderDrawColor(rend, 0x55, 0xFF, 0xFF, 0x00);
 	SDL_RenderDrawRect(rend,&bounds);
@@ -543,7 +545,7 @@ void graphical_interface::int_bar(int x,int y, int& val,int min, int max)
 
 void graphical_interface::int_knob(int x, int y, int& val,int min, int max, int mult)
 {
-	float range = max - min;
+	double range = max - min;
 
 	SDL_Rect bounds = {x+offset_x,y+offset_y,32,32};
 	last_rect = SDL_Rect{x,y,bounds.w,bounds.h};
@@ -568,7 +570,7 @@ void graphical_interface::int_knob(int x, int y, int& val,int min, int max, int 
 	}
 	else
 	{
-		angle = base + (( (float)(val-min)/range) * max_rot); 
+		angle = base + (( (double)(val-min)/range) * max_rot); 
 	}
 
 	SDL_RenderCopy(rend,sprites,&knob_body_src,&bounds);
@@ -579,7 +581,7 @@ void graphical_interface::int_knob(int x, int y, int& val,int min, int max, int 
 // SPECIAL WIDGIES
 //=============================================================================
 // IDK Why but this is faster than std::max / std::min
-static inline float flmax(float a,float b)
+static inline double flmax(double a,double b)
 {
 	if(a>b)
 	{
@@ -591,7 +593,7 @@ static inline float flmax(float a,float b)
 	}
 }
 
-static inline float flmin(float a,float b)
+static inline double flmin(double a,double b)
 {
 	if(a<b)
 	{
@@ -646,14 +648,14 @@ void graphical_interface::tape_view(int x, int y, tape_lop& lop)
 
 		for(int bucket=0;bucket<in_bounds.w;++bucket)
 		{
-			float top = 0;
-			float bottom = 0;
+			double top = 0;
+			double bottom = 0;
 			int buck_base = bucket*samps_per_line;
 
 			for(int i=0;i<samps_per_line;++i)
 			{
 				int tape_pos =  buck_base + i;
-				float tape_val = lop.tape.at(tape_pos);
+				double tape_val = lop.tape.at(tape_pos);
 
 				top=flmax(top,tape_val);
 				bottom=flmin(bottom,tape_val);
@@ -717,7 +719,7 @@ void graphical_interface::state_label(int x,int y,const char* true_text, const c
 	last_rect = {x,y,bx.w,bx.h};
 }
 
-void graphical_interface::float_label(int x,int y,const char* pre_text,float& val)
+void graphical_interface::double_label(int x,int y,const char* pre_text,double& val)
 {
 	std::snprintf(temp_buff,256,"%s %5.4f",pre_text,val);
 	box_size bx = writer.write(x+offset_x,y+offset_y,temp_buff);
