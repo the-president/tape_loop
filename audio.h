@@ -34,4 +34,12 @@ struct audio_system
 
 int rtaudio_callback(void* outbuf,void* inbuf,unsigned int nFrames,double streamtime,RtAudioStreamStatus	status,void* userdata);
 
+//=============================================================================
+//a half-assed global implementation
+//=============================================================================
+
+
+void set_global_audio(audio_system* sys);
+const audio_system& get_global_audio();
+
 #endif

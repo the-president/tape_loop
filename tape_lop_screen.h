@@ -1,20 +1,22 @@
 #ifndef TAPE_LOP_SCREEN_DOT_H
 #define TAPE_LOP_SCREEN_DOT_H
 
-#include <vector>
+#include <list>
 #include "tape_lop.h"
 #include "screen.h"
 #include "audio_guy.h"
 
 struct tape_lop_screen : public screen, audio_guy
 {
-	std::vector<tape_lop> loops;
+	tape_lop& loop_at(int index);
+	std::list<tape_lop> loops;
 
 	int bpm = 120;
 	int bars = 1;
 
 	void add_loop(unsigned int sample_rate,int inputs,int outputs);
 	void drop_loop(int index);
+	void dupe_loop (unsigned int sample_rate,int inputs,int outputs,int index);
 
 	void top_panel(graphical_interface& gui, audio_system& audio, int& scroll, int gap=546);
 

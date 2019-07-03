@@ -179,3 +179,30 @@ double tape_lop::tick(double input_val)
 
 	return out_val;
 }
+
+void tape_lop::normalize()
+{
+	double abs_max = 0;
+
+	for(double& d : tape)
+	{
+		if(abs_max < abs(d))
+		{
+			abs_max=d;
+		}
+	}
+
+	if(abs_max >= 1.0)
+	{
+		return;
+	}
+	else
+	{
+		double normval = 1.0/abs_max;
+		for(double& d : tape)
+		{
+			d = d * normval;
+		}
+	}
+
+}

@@ -1,8 +1,26 @@
 #include <cmath>
 #include <stdio.h>
 #include <sndfile.hh>
+#include <exception>
 #include "tape_lop_screen.h"
 #include "file_dialog/tinyfiledialogs.h"
+
+tape_lop& tape_lop_screen::loop_at(int index)
+{
+	auto iter = loops.begin();
+
+	for(int i=0; i < index; ++i)
+	{
+		++iter;
+
+		if(iter == loops.end())
+		{
+			throw "bad loop access";
+		}
+	}
+
+	return *iter;
+}
 
 //some dumb layout consts
 static int panel_margin = 2;
@@ -60,8 +78,7 @@ void tape_lop_screen::top_panel(graphical_interface& gui,audio_system& audio,int
 				
 				loops.emplace_back(audio.in_channels,audio.out_channels,inf.frames);
 
-				tape_lop& load_loop = loops.at(loops.size()-1);
-
+				tape_lop& load_loop = loop_at(loops.size()-1);
 
 				double read[inf.channels];
 
@@ -130,8 +147,73 @@ void tape_lop_screen::add_loop(unsigned int sample_rate,int inputs,int outputs)
 
 void tape_lop_screen::drop_loop(int index)
 {
-	auto pos = loops.begin() + index;
-	loops.erase(pos);
+	auto iter = loops.begin();
+
+	for(int i=0; i < index; ++i)
+	{
+		++iter;
+
+		if(iter == loops.end())
+		{
+			throw "bad loop access";
+		}
+	}
+
+	loops.erase(iter);
+}
+
+void tape_lop_screen::dupe_loop (unsigned int sample_rate,int inputs,int outputs,int index)
+{
+	int sz = loop_at(index).tape.size();
+
+	loops.emplace_back(inputs,outputs,sz);
+
+	//you need to get the reference after you do any changes to the vector, as it might move things around
+
+	tape_lop& loop = loop_at(index);
+	tape_lop& to_dupe = loop_at(loops.size() - 1);
+
+	for(int i=0;i<to_dupe.tape.size();++i)
+	{
+		to_dupe.tape[i] = loop.tape[i]; 
+	}
+
+	//I dont let them set anything else on the input filter
+	to_dupe.input_filter.cutoff = loop.input_filter.cutoff;
+
+	for(int i=0;i<to_dupe.inputs.size();++i)
+	{
+		to_dupe.inputs[i] = loop.inputs[i]; 
+	}	
+
+	for(int i=0;i<to_dupe.outputs.size();++i)
+	{
+		to_dupe.outputs[i] = loop.outputs[i]; 
+	}
+
+	for(int i=0;i<3;++i)
+	{
+		read_head& rh = loop.read_heads[i];
+		read_head& dupe_rh = to_dupe.read_heads[i];
+
+		dupe_rh.offset.val = rh.offset.val;
+		dupe_rh.offset.target = rh.offset.target;
+		dupe_rh.amp.val = rh.amp.val;
+
+		dupe_rh.amp.val = rh.amp.val;
+		dupe_rh.amp.target = rh.amp.target;
+		dupe_rh.amp.increment = rh.amp.increment;
+
+		dupe_rh.feedback.val = rh.feedback.val;
+		dupe_rh.feedback.target = rh.feedback.target;
+		dupe_rh.feedback.increment = rh.feedback.increment;
+		
+		dupe_rh.output_filter.cutoff = rh.output_filter.cutoff;
+		dupe_rh.output_filter.reso = rh.output_filter.reso;
+		dupe_rh.output_filter.mode = rh.output_filter.mode;
+	
+		dupe_rh.active = rh.active;
+	}
 }
 
 screen_result tape_lop_screen::loop(sdl_system& sys, audio_system& audio,graphical_interface& gui,frame_rate_manager& frame_buddy)
@@ -179,17 +261,22 @@ screen_result tape_lop_screen::loop(sdl_system& sys, audio_system& audio,graphic
 		{
 			int x = gui.left_end();
 			int y = gui.bottom() + 10;
-			tape_lop& loop = loops.at(i);
+			tape_lop& loop = loop_at(i);
 			loop.loop_number = i + 1;
-			loop.main_panel(gui,x,y);
+			
+			tape_lop::action_call loop_action = loop.main_panel(gui,x,y);
 
-			if(loop.graphics_state == tape_lop::gui_state::COLLAPSED)
+			//ok this will cause some frame blips maybe
+			fill += loop.fill();
+
+			if(loop_action == tape_lop::action_call::DELETE)
 			{
-				fill += 1;
+				drop_loop(i);
 			}
-			else
+
+			if(loop_action == tape_lop::action_call::DUPE)
 			{
-				fill += 2;
+				dupe_loop(audio.sample_rate,audio.in_channels,audio.out_channels,i);
 			}
 		}
 		

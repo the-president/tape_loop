@@ -11,7 +11,7 @@
 #include "sdl_system.h"
 #include "state_variable_filter.h"
 
-class graphical_interface; 
+class graphical_interface;
 
 struct read_head
 {
@@ -31,7 +31,7 @@ struct tape_lop
 	std::vector<double> tape;
 
 	int write_head;
-	double write_head_fraction;
+	double write_head_fraction = 0;
 	double last_val;
 
 	double speed = 1;
@@ -60,18 +60,28 @@ struct tape_lop
 	double tick(double input_val);
 	
 	tape_lop(int inputs,int outputs,unsigned int length);
-	void init_buckets();
 
-	int find_bucket(int sample);
+	//---------------------------------------------------
+	//edit stuff
+
+	void normalize();
 
 	//---------------------------------------------------
 	//GUI STUFF in tape_lop_gui.cpp
 
 	enum gui_state
 	{
-		COLLAPSED=0,
+		GONE = 0,
+		COLLAPSED,
 		MIXER,
 		WAVE_FORM
+	};
+
+	enum action_call
+	{
+		NONE =0,
+		DELETE,
+		DUPE
 	};
 
 	gui_state graphics_state = COLLAPSED;
@@ -79,15 +89,17 @@ struct tape_lop
 	int input_page = 0;
 	int output_page = 0;
 
-	void collapsed_panel(graphical_interface& gui, int x, int y);
-	void mixer_panel(graphical_interface& gui, int x, int y);
-	void waveform_panel(graphical_interface& gui, int x, int y);
-	void top_controls(graphical_interface& gui, int x, int y);
-	void main_panel(graphical_interface& gui, int x, int y);
+	action_call collapsed_panel(graphical_interface& gui, int x, int y);
+	action_call mixer_panel(graphical_interface& gui, int x, int y);
+	action_call waveform_panel(graphical_interface& gui, int x, int y);
+	action_call top_controls(graphical_interface& gui, int x, int y);
+	action_call main_panel(graphical_interface& gui, int x, int y);
 	void input_mixer(graphical_interface& gui, int x, int y);
 	void output_mixer(graphical_interface& gui, int x, int y);
 	void read_head_view(graphical_interface& gui, int x, int y, read_head& rh,  int index);
 	void transport_panel(graphical_interface& gui, int x, int y);
+
+	int fill();
 };
 
 #endif

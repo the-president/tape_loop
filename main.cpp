@@ -20,6 +20,7 @@ int main()
 	frame_rate_manager frame_buddy(60);
 
 	audio_system audio(48000,128);
+	set_global_audio(&audio);
 
 	SDL_Texture* font_text = pdos_12_info.load_font_texture(sys.renderer);
 

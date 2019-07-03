@@ -1,4 +1,5 @@
 #include <cmath>
+#include "audio.h"
 #include "state_variable_filter.h"
 
 svf::svf():
@@ -8,7 +9,10 @@ reso(0.0),
 
 state_1(0.0),
 state_2(0.0)
-{}
+{
+	sample_rate = get_global_audio().sample_rate;
+
+}
 
 svf::svf(double c,double r,svf_mode m):
 mode(m),
@@ -17,7 +21,9 @@ reso(r),
 
 state_1(0.0),
 state_2(0.0)
-{}
+{
+	sample_rate = get_global_audio().sample_rate;
+}
 
 void svf::calculate_filter_coefficients()
 {

@@ -119,3 +119,24 @@ void audio_system::stop()
 		stream_running = false;	
 	}	
 }
+
+static audio_system* global_audio_system = NULL;
+
+void set_global_audio(audio_system* sys)
+{
+	global_audio_system = sys;
+}
+
+const audio_system& get_global_audio()
+{
+	if(global_audio_system != NULL)
+	{
+		return *global_audio_system;	
+	}
+	else
+	{
+		//gtfo, im doing this half-assed for now
+		throw "global audio system invalid access";
+	}
+	
+}

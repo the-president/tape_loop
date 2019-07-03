@@ -1,4 +1,5 @@
 #include <sndfile.hh>
+#include "audio.h"
 #include "file_dialog/tinyfiledialogs.h"
 #include "tape_lop.h"
 
@@ -13,11 +14,13 @@ static const int ph = 160;
 static const int gap= 30;
 static const int in_out_page_size = 8;
 
-void tape_lop::collapsed_panel(graphical_interface& gui, int x, int y)
+tape_lop::action_call tape_lop::collapsed_panel(graphical_interface& gui, int x, int y)
 {
+	tape_lop::action_call retval = tape_lop::action_call::NONE;
+
 	gui.panel(x,y,panel_width,collapsed_panel_height);
 	{
-		top_controls(gui,panel_margin,panel_margin);
+		retval = top_controls(gui,panel_margin,panel_margin);
 		
 		int bottom_line = gui.bottom() + panel_margin;
 
@@ -30,13 +33,17 @@ void tape_lop::collapsed_panel(graphical_interface& gui, int x, int y)
 		}
 	}
 	gui.panel_end();
+
+	return retval;
 }
 
-void tape_lop::mixer_panel(graphical_interface& gui, int x, int y)
+tape_lop::action_call tape_lop::mixer_panel(graphical_interface& gui, int x, int y)
 {
+	tape_lop::action_call retval = tape_lop::action_call::NONE;
+
 	gui.panel(x,y,panel_width,panel_height);
 	{
-		top_controls(gui,panel_margin,panel_margin);
+		retval = top_controls(gui,panel_margin,panel_margin);
 		int start_line = gui.left_end();
 
 		int mid_line = gui.bottom() + panel_margin;
@@ -58,13 +65,17 @@ void tape_lop::mixer_panel(graphical_interface& gui, int x, int y)
 		}
 	}
 	gui.panel_end();
+
+	return retval;
 }
 
-void tape_lop::waveform_panel(graphical_interface& gui, int x, int y)
+tape_lop::action_call tape_lop::waveform_panel(graphical_interface& gui, int x, int y)
 {
+	tape_lop::action_call retval = tape_lop::action_call::NONE;
+
 	gui.panel(x,y,panel_width,panel_height);
 	{
-		top_controls(gui,panel_margin,panel_margin);
+		retval = top_controls(gui,panel_margin,panel_margin);
 		int start_line = gui.left_end();
 
 		gui.tape_view(start_line,gui.bottom() + panel_margin,*this);
@@ -83,26 +94,40 @@ void tape_lop::waveform_panel(graphical_interface& gui, int x, int y)
 		}
 	}
 	gui.panel_end();
+
+	return retval;
 }
 
-void tape_lop::main_panel(graphical_interface& gui, int x, int y)
+tape_lop::action_call tape_lop::main_panel(graphical_interface& gui, int x, int y)
 {
+	auto retval = tape_lop::action_call::NONE;
+
 	switch(graphics_state)
 	{
+		case GONE:
+			retval = tape_lop::action_call::NONE;
+		break;
 		case COLLAPSED:
-			collapsed_panel(gui, x, y);
+			retval = collapsed_panel(gui, x, y);
 		break;
 		case MIXER:
-			mixer_panel(gui, x, y);
+			retval = mixer_panel(gui, x, y);
 		break;
 		case WAVE_FORM:
-			waveform_panel(gui, x, y);
+			retval = waveform_panel(gui, x, y);
+		break;
+		default:
+			retval = tape_lop::action_call::NONE;
 		break;
 	}
+
+	return retval;
 }
 
-void tape_lop::top_controls(graphical_interface& gui, int x, int y)
+tape_lop::action_call tape_lop::top_controls(graphical_interface& gui, int x, int y)
 {
+	tape_lop::action_call retval = tape_lop::action_call::NONE;
+
 	gui.panel(x,y,panel_width-7,40);
 	{
 		int other_side = panel_width-7;
@@ -125,7 +150,17 @@ void tape_lop::top_controls(graphical_interface& gui, int x, int y)
 
 		gui.format_label(gui.right_end()+10, center_line + 2,"loop %d",loop_number);
 
-		if (gui.button(other_side - 45, center_line,"save"))
+		if (gui.button(other_side - 200, center_line,"X"))
+		{
+			retval = tape_lop::action_call::DELETE;
+		}
+
+		if (gui.button(gui.right_end()+panel_margin, center_line,"dupe"))
+		{
+			retval = tape_lop::action_call::DUPE;
+		}
+
+		if (gui.button(gui.right_end()+panel_margin, center_line,"save"))
 		{
 			const char* path = tinyfd_saveFileDialog("open file","",0,NULL,NULL);
 
@@ -133,7 +168,7 @@ void tape_lop::top_controls(graphical_interface& gui, int x, int y)
 			{
 				SF_INFO inf;
 				
-				inf.samplerate= 48000;
+				inf.samplerate = get_global_audio().sample_rate;;
 				inf.frames = tape.size();
 				inf.channels	= 1;
 				inf
@@ -161,9 +196,14 @@ void tape_lop::top_controls(graphical_interface& gui, int x, int y)
 			}
 		}
 
-		
+		if (gui.button(gui.right_end()+panel_margin, center_line,"normalize"))
+		{
+			normalize();
+		}
 	}
 	gui.panel_end();
+
+	return retval;
 }
 
 void tape_lop::input_mixer(graphical_interface& gui, int x, int y)
@@ -214,6 +254,7 @@ void tape_lop::input_mixer(graphical_interface& gui, int x, int y)
 		}
 
 		int filter_x = panel_width - 160;
+
 		gui.flat_label(filter_x,input_panel_top,"input filter");
 		gui.double_knob(filter_x,gui.bottom() + 5,input_filter.cutoff,0.001,0.9999);
 
@@ -399,4 +440,20 @@ void tape_lop::transport_panel(graphical_interface& gui, int x, int y)
 		gui.double_label(speed_center - (6*9),c_line,"Speed",speed);
 	}
 	gui.panel_end();
+}
+
+int tape_lop::fill()
+{
+	switch(graphics_state)
+	{
+		case GONE:
+			return 0;
+		break;
+		case COLLAPSED:
+			return 1;
+		break;
+		default:
+			return 2;
+		break;
+	}
 }

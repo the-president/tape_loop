@@ -21,7 +21,7 @@ struct svf
 
 	double cutoff;
 	double reso;
-	double sample_rate = 48000;
+	double sample_rate;
 	
 	protected:
 		double gain;
